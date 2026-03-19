@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useDeferredValue, useEffect, useEffectEvent, useState } from "react";
+import { useDeferredValue, useEffect, useEffectEvent, useRef, useState } from "react";
 import {
   DEFAULT_LANGUAGE,
   LANGUAGE_OPTIONS,
@@ -82,6 +82,10 @@ export function PlexaddApp() {
   const [password, setPassword] = useState("");
   const [isSubmittingLogin, setIsSubmittingLogin] = useState(false);
   const [isMutatingRequest, setIsMutatingRequest] = useState<string | null>(null);
+  const [showInlineMobileLanguage, setShowInlineMobileLanguage] = useState(false);
+  const headerRowRef = useRef<HTMLDivElement | null>(null);
+  const logoRef = useRef<HTMLDivElement | null>(null);
+  const loginButtonRef = useRef<HTMLButtonElement | null>(null);
 
   const dictionary = dictionaries[language];
   const deferredSearchQuery = useDeferredValue(searchQuery);
@@ -152,6 +156,45 @@ export function PlexaddApp() {
     document.cookie = `plexadd_language=${language}; path=/; max-age=31536000; samesite=lax`;
     document.documentElement.lang = language;
   }, [language]);
+
+  const updateMobileLanguagePlacement = useEffectEvent(() => {
+    if (window.innerWidth >= 768) {
+      setShowInlineMobileLanguage(false);
+      return;
+    }
+
+    const rowWidth = headerRowRef.current?.clientWidth ?? 0;
+    const logoWidth = logoRef.current?.offsetWidth ?? 0;
+    const loginWidth = loginButtonRef.current?.offsetWidth ?? 0;
+    const compactLanguageWidth = 104;
+    const totalWidth = logoWidth + loginWidth + compactLanguageWidth + 24;
+
+    setShowInlineMobileLanguage(totalWidth <= rowWidth);
+  });
+
+  useEffect(() => {
+    updateMobileLanguagePlacement();
+
+    const handleResize = () => updateMobileLanguagePlacement();
+    window.addEventListener("resize", handleResize);
+
+    if (typeof ResizeObserver === "undefined") {
+      return () => window.removeEventListener("resize", handleResize);
+    }
+
+    const observer = new ResizeObserver(() => updateMobileLanguagePlacement());
+
+    [headerRowRef.current, logoRef.current, loginButtonRef.current].forEach((element) => {
+      if (element) {
+        observer.observe(element);
+      }
+    });
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      observer.disconnect();
+    };
+  }, [config?.adminAuthenticated, language]);
 
   useEffect(() => {
     let isMounted = true;
@@ -327,28 +370,91 @@ export function PlexaddApp() {
       <div className="mx-auto flex min-h-screen max-w-6xl flex-col px-4 py-4 sm:px-6 lg:px-8">
         <header className="rounded-[7px] border border-[#1f1f1f] bg-[#0a0a0a]">
           <div className="flex flex-col gap-5 px-4 py-4 sm:px-6">
-            <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-              <div className="space-y-2">
-                <Image
-                  src="/logo/plexadd-logo.svg"
-                  alt="Plexadd"
-                  width={180}
-                  height={36}
-                  priority
-                  className="h-8 w-auto"
-                />
-                <p className="max-w-2xl text-sm leading-6 text-[var(--color-text-muted)]">
-                  {dictionary.subtitle}
-                </p>
+            <div className="space-y-3">
+              <div ref={headerRowRef} className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <div ref={logoRef}>
+                    <Image
+                      src="/logo/plexadd-logo.svg"
+                      alt="Plexadd"
+                      width={180}
+                      height={36}
+                      priority
+                      className="h-8 w-auto shrink-0"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex shrink-0 items-center gap-2">
+                  {showInlineMobileLanguage ? (
+                    <div className="inline-flex h-10 w-fit items-center rounded-[999px] border border-[#1f1f1f] bg-[#0a0a0a] p-1 md:hidden">
+                      {LANGUAGE_OPTIONS.map((option) => (
+                        <button
+                          key={option}
+                          type="button"
+                          className={`flex h-8 w-8 items-center justify-center rounded-[999px] text-xs leading-none transition-colors ${
+                            language === option
+                              ? "bg-[#ededed] text-[#0a0a0a]"
+                              : "text-[#9f9f9f] hover:bg-[#111111] hover:text-[#ededed]"
+                          }`}
+                          onClick={() => setLanguage(option)}
+                        >
+                          {languageNames[option]}
+                        </button>
+                      ))}
+                    </div>
+                  ) : null}
+
+                  <div className="hidden h-10 w-fit items-center rounded-[999px] border border-[#1f1f1f] bg-[#0a0a0a] p-1 md:inline-flex">
+                    {LANGUAGE_OPTIONS.map((option) => (
+                      <button
+                        key={option}
+                        type="button"
+                        className={`flex h-8 w-10 items-center justify-center rounded-[999px] text-sm leading-none transition-colors ${
+                          language === option
+                            ? "bg-[#ededed] text-[#0a0a0a]"
+                            : "text-[#9f9f9f] hover:bg-[#111111] hover:text-[#ededed]"
+                        }`}
+                        onClick={() => setLanguage(option)}
+                      >
+                        {languageNames[option]}
+                      </button>
+                    ))}
+                  </div>
+
+                  {config?.adminAuthenticated ? (
+                    <button
+                      ref={loginButtonRef}
+                      type="button"
+                      className="h-10 whitespace-nowrap rounded-[999px] border border-[#1f1f1f] bg-[#0a0a0a] px-4 text-sm font-medium text-[#ededed] transition-colors hover:border-[#2a2a2a] hover:bg-[#111111]"
+                      onClick={() => void handleAdminLogout()}
+                    >
+                      {dictionary.adminLogout}
+                    </button>
+                  ) : (
+                    <button
+                      ref={loginButtonRef}
+                      type="button"
+                      className="h-10 whitespace-nowrap rounded-[999px] bg-[#ededed] px-4 text-sm font-medium text-[#0a0a0a] transition-colors hover:bg-[#ffffff]"
+                      onClick={() => setIsAdminPanelOpen((current) => !current)}
+                    >
+                      {dictionary.adminLogin}
+                    </button>
+                  )}
+                </div>
               </div>
 
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-                <div className="inline-flex h-10 w-fit items-center rounded-[999px] border border-[#1f1f1f] bg-[#0a0a0a] p-1">
+              <p className="max-w-2xl text-sm leading-6 text-[var(--color-text-muted)]">
+                {dictionary.subtitle}
+              </p>
+
+              {!showInlineMobileLanguage ? (
+                <div className="inline-flex h-10 w-fit items-center rounded-[999px] border border-[#1f1f1f] bg-[#0a0a0a] p-1 md:hidden">
                   {LANGUAGE_OPTIONS.map((option) => (
                     <button
                       key={option}
                       type="button"
-                      className={`flex h-8 w-10 items-center justify-center rounded-[999px] text-sm leading-none transition-colors ${
+                      className={`flex h-8 w-8 items-center justify-center rounded-[999px] text-xs leading-none transition-colors ${
                         language === option
                           ? "bg-[#ededed] text-[#0a0a0a]"
                           : "text-[#9f9f9f] hover:bg-[#111111] hover:text-[#ededed]"
@@ -359,25 +465,7 @@ export function PlexaddApp() {
                     </button>
                   ))}
                 </div>
-
-                {config?.adminAuthenticated ? (
-                  <button
-                    type="button"
-                    className="h-10 whitespace-nowrap rounded-[999px] border border-[#1f1f1f] bg-[#0a0a0a] px-4 text-sm font-medium text-[#ededed] transition-colors hover:border-[#2a2a2a] hover:bg-[#111111]"
-                    onClick={() => void handleAdminLogout()}
-                  >
-                    {dictionary.adminLogout}
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    className="h-10 whitespace-nowrap rounded-[999px] bg-[#ededed] px-4 text-sm font-medium text-[#0a0a0a] transition-colors hover:bg-[#ffffff]"
-                    onClick={() => setIsAdminPanelOpen((current) => !current)}
-                  >
-                    {dictionary.adminLogin}
-                  </button>
-                )}
-              </div>
+              ) : null}
             </div>
 
             <nav className="grid gap-2 sm:grid-cols-3">
@@ -449,7 +537,7 @@ export function PlexaddApp() {
         </header>
 
         <div className="mt-4 grid gap-4 lg:items-start lg:grid-cols-[minmax(0,400px)_minmax(0,1fr)]">
-          <section className="self-start rounded-[7px] border border-[#1f1f1f] bg-[#0a0a0a]">
+          <section className="min-w-0 self-start rounded-[7px] border border-[#1f1f1f] bg-[#0a0a0a]">
             <div className="border-b border-[var(--color-border-soft)] px-4 py-4 sm:px-5">
               <h2 className="text-base font-semibold text-[var(--color-text)]">
                 {dictionary.addPanelTitle}
@@ -493,7 +581,7 @@ export function PlexaddApp() {
                 />
               </label>
 
-              <div className="max-h-[28rem] overflow-y-auto rounded-[7px] border border-[#171717] bg-[#000000]">
+              <div className="max-h-[28rem] overflow-hidden overflow-y-auto rounded-[7px] border border-[#171717] bg-[#000000]">
                 {isLoadingSearch ? (
                   <div className="px-4 py-6 text-sm text-[var(--color-text-muted)]">
                     {dictionary.searching}
@@ -510,13 +598,13 @@ export function PlexaddApp() {
                   <ul className="divide-y divide-[var(--color-border-soft)]">
                     {searchResults.map((result) => (
                       <li key={`${result.mediaType}-${result.sourceId}`}>
-                        <div className="flex items-start gap-3 px-4 py-3">
+                        <div className="flex min-w-0 items-start gap-3 px-4 py-3">
                           <Poster imageUrl={result.imageUrl} title={result.title} />
                           <div className="min-w-0 flex-1">
                             <div className="truncate text-sm font-medium text-[var(--color-text)]">
                               {result.title}
                             </div>
-                            <div className="mt-1 text-xs leading-5 text-[var(--color-text-muted)]">
+                            <div className="mt-1 truncate text-xs leading-5 text-[var(--color-text-muted)]">
                               {[dictionary.labels[result.mediaType], result.subtitle, result.releaseYear]
                                 .filter(Boolean)
                                 .join("  •  ")}
@@ -541,7 +629,7 @@ export function PlexaddApp() {
             </div>
           </section>
 
-          <section className="rounded-[7px] border border-[#1f1f1f] bg-[#0a0a0a] lg:flex lg:h-[calc(100vh-16rem)] lg:min-h-0 lg:flex-col">
+          <section className="min-w-0 rounded-[7px] border border-[#1f1f1f] bg-[#0a0a0a] lg:flex lg:h-[calc(100vh-16rem)] lg:min-h-0 lg:flex-col">
             <div className="flex flex-col gap-2 border-b border-[var(--color-border-soft)] px-4 py-4 sm:flex-row sm:items-end sm:justify-between sm:px-5">
               <div>
                 <h2 className="text-base font-semibold text-[var(--color-text)]">
@@ -582,13 +670,13 @@ export function PlexaddApp() {
                 <ul className="divide-y divide-[var(--color-border-soft)]">
                   {filteredRequests.map((request) => (
                     <li key={request.id}>
-                      <div className="flex items-start gap-3 px-4 py-4 sm:px-5">
+                      <div className="flex min-w-0 items-start gap-3 px-4 py-4 sm:px-5">
                         <Poster imageUrl={request.imageUrl} title={request.title} />
                         <div className="min-w-0 flex-1">
                           <div className="truncate text-sm font-medium text-[var(--color-text)]">
                             {request.title}
                           </div>
-                          <div className="mt-1 text-xs leading-5 text-[var(--color-text-muted)]">
+                          <div className="mt-1 truncate text-xs leading-5 text-[var(--color-text-muted)]">
                             {formatRequestMeta(request, language, dictionary.labels)}
                           </div>
                         </div>
