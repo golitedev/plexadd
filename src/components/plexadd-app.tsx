@@ -68,13 +68,15 @@ function formatRequestMeta(
 export function PlexaddApp() {
   const [language, setLanguage] = useState<Language>(DEFAULT_LANGUAGE);
   const [section, setSection] = useState<Section>("movies");
-  const [musicMode, setMusicMode] = useState<"song" | "album">("song");
+  const [musicMode, setMusicMode] = useState<"song" | "album">("album");
   const [requests, setRequests] = useState<RequestRecord[]>([]);
   const [config, setConfig] = useState<AppConfig | null>(null);
   const [isLoadingRequests, setIsLoadingRequests] = useState(true);
   const [isLoadingSearch, setIsLoadingSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [manualMusicName, setManualMusicName] = useState("");
+  const [manualArtistName, setManualArtistName] = useState("");
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false);
@@ -245,11 +247,13 @@ export function PlexaddApp() {
   useEffect(() => {
     setSearchQuery("");
     setSearchResults([]);
+    setManualMusicName("");
+    setManualArtistName("");
     setErrorMessage(null);
   }, [section, musicMode]);
 
-  async function handleAddRequest(result: SearchResult) {
-    setIsMutatingRequest(result.sourceId);
+  async function handleAddRequest(result: SearchResult, mutationKey = result.sourceId) {
+    setIsMutatingRequest(mutationKey);
     setErrorMessage(null);
     setStatusMessage(null);
 
@@ -274,20 +278,48 @@ export function PlexaddApp() {
       setSearchQuery("");
       setSearchResults([]);
       setStatusMessage(dictionary.feedback.added);
+      return true;
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : dictionary.errors.generic);
+      return false;
     } finally {
       setIsMutatingRequest(null);
     }
   }
 
-  async function handleDeleteRequest(id: string) {
-    const confirmed = window.confirm(dictionary.confirmDelete);
+  async function handleAddManualMusicRequest(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
 
-    if (!confirmed) {
+    const title = manualMusicName.trim();
+    const artist = manualArtistName.trim();
+
+    if (!title || !artist) {
       return;
     }
 
+    const normalizedTitle = title.toLowerCase().replace(/\s+/g, "-");
+    const normalizedArtist = artist.toLowerCase().replace(/\s+/g, "-");
+
+    const created = await handleAddRequest(
+      {
+        mediaType: musicMode,
+        title,
+        subtitle: artist,
+        releaseYear: null,
+        imageUrl: null,
+        source: "musicbrainz",
+        sourceId: `manual-${musicMode}-${normalizedTitle}-${normalizedArtist}-${Date.now()}`,
+      },
+      "manual-request",
+    );
+
+    if (created) {
+      setManualMusicName("");
+      setManualArtistName("");
+    }
+  }
+
+  async function handleDeleteRequest(id: string) {
     setIsMutatingRequest(id);
     setErrorMessage(null);
     setStatusMessage(null);
@@ -550,7 +582,7 @@ export function PlexaddApp() {
             <div className="space-y-4 p-4 sm:p-5">
               {section === "music" ? (
                 <div className="grid grid-cols-2 gap-2">
-                  {(["song", "album"] as const).map((option) => {
+                  {(["album", "song"] as const).map((option) => {
                     const isActive = option === musicMode;
 
                     return (
@@ -599,7 +631,11 @@ export function PlexaddApp() {
                     {searchResults.map((result) => (
                       <li key={`${result.mediaType}-${result.sourceId}`}>
                         <div className="flex min-w-0 items-start gap-3 px-4 py-3">
-                          <Poster imageUrl={result.imageUrl} title={result.title} />
+                          <Poster
+                            imageUrl={result.imageUrl}
+                            title={result.title}
+                            mediaType={result.mediaType}
+                          />
                           <div className="min-w-0 flex-1">
                             <div className="truncate text-sm font-medium text-[var(--color-text)]">
                               {result.title}
@@ -626,10 +662,60 @@ export function PlexaddApp() {
                   </ul>
                 )}
               </div>
+
+              {section === "music" ? (
+                <form
+                  className="space-y-4 rounded-[7px] border border-[#1f1f1f] bg-[#000000] p-4"
+                  onSubmit={(event) => void handleAddManualMusicRequest(event)}
+                >
+                  <div>
+                    <h3 className="text-sm font-medium text-[var(--color-text)]">
+                      {dictionary.manualMusic.title}
+                    </h3>
+                    <p className="mt-1 text-sm text-[var(--color-text-muted)]">
+                      {dictionary.manualMusic.subtitle}
+                    </p>
+                  </div>
+
+                  <label className="flex flex-col gap-2 text-sm text-[var(--color-text-muted)]">
+                    <span>{dictionary.manualMusic.nameLabel[musicMode]}</span>
+                    <input
+                      className="h-12 rounded-[6px] border border-[#1f1f1f] bg-[#000000] px-4 text-[#ededed] outline-none transition-colors placeholder:text-[var(--color-text-muted)] focus:border-[#ededed]"
+                      placeholder={dictionary.manualMusic.namePlaceholder[musicMode]}
+                      value={manualMusicName}
+                      onChange={(event) => setManualMusicName(event.target.value)}
+                    />
+                  </label>
+
+                  <label className="flex flex-col gap-2 text-sm text-[var(--color-text-muted)]">
+                    <span>{dictionary.manualMusic.artistLabel}</span>
+                    <input
+                      className="h-12 rounded-[6px] border border-[#1f1f1f] bg-[#000000] px-4 text-[#ededed] outline-none transition-colors placeholder:text-[var(--color-text-muted)] focus:border-[#ededed]"
+                      placeholder={dictionary.manualMusic.artistPlaceholder}
+                      value={manualArtistName}
+                      onChange={(event) => setManualArtistName(event.target.value)}
+                    />
+                  </label>
+
+                  <button
+                    type="submit"
+                    className="h-11 w-full rounded-[6px] bg-[#ededed] px-4 text-sm font-medium text-[#0a0a0a] transition-colors hover:bg-[#ffffff] disabled:cursor-not-allowed disabled:opacity-60"
+                    disabled={
+                      isMutatingRequest === "manual-request" ||
+                      !manualMusicName.trim() ||
+                      !manualArtistName.trim()
+                    }
+                  >
+                    {isMutatingRequest === "manual-request"
+                      ? dictionary.loading
+                      : dictionary.manualMusic.submit}
+                  </button>
+                </form>
+              ) : null}
             </div>
           </section>
 
-          <section className="min-w-0 rounded-[7px] border border-[#1f1f1f] bg-[#0a0a0a] lg:flex lg:h-[calc(100vh-16rem)] lg:min-h-0 lg:flex-col">
+          <section className="min-w-0 rounded-[7px] border border-[#1f1f1f] bg-[#0a0a0a] lg:flex lg:max-h-[calc(100vh-16rem)] lg:min-h-0 lg:flex-col lg:overflow-hidden">
             <div className="flex flex-col gap-2 border-b border-[var(--color-border-soft)] px-4 py-4 sm:flex-row sm:items-end sm:justify-between sm:px-5">
               <div>
                 <h2 className="text-base font-semibold text-[var(--color-text)]">
@@ -671,7 +757,11 @@ export function PlexaddApp() {
                   {filteredRequests.map((request) => (
                     <li key={request.id}>
                       <div className="flex min-w-0 items-start gap-3 px-4 py-4 sm:px-5">
-                        <Poster imageUrl={request.imageUrl} title={request.title} />
+                        <Poster
+                          imageUrl={request.imageUrl}
+                          title={request.title}
+                          mediaType={request.mediaType}
+                        />
                         <div className="min-w-0 flex-1">
                           <div className="truncate text-sm font-medium text-[var(--color-text)]">
                             {request.title}
@@ -709,15 +799,33 @@ export function PlexaddApp() {
 function Poster({
   imageUrl,
   title,
+  mediaType,
 }: {
   imageUrl: string | null;
   title: string;
+  mediaType: MediaType;
 }) {
   const [failedImageUrl, setFailedImageUrl] = useState<string | null>(null);
+  const isMusic = mediaType === "song" || mediaType === "album";
+  const dimensions = isMusic
+    ? {
+        width: 64,
+        height: 64,
+        className: "h-16 w-16 shrink-0 rounded-[5px] border border-[var(--color-border)] object-cover",
+      }
+    : {
+        width: 48,
+        height: 64,
+        className: "h-16 w-12 shrink-0 rounded-[5px] border border-[var(--color-border)] object-cover",
+      };
 
   if (!imageUrl || failedImageUrl === imageUrl) {
     return (
-      <div className="flex h-16 w-12 shrink-0 items-center justify-center rounded-[5px] border border-[var(--color-border)] bg-[var(--color-surface-strong)] text-[10px] uppercase tracking-[0.14em] text-[var(--color-text-muted)]">
+      <div
+        className={`flex shrink-0 items-center justify-center rounded-[5px] border border-[var(--color-border)] bg-[var(--color-surface-strong)] text-[10px] uppercase tracking-[0.14em] text-[var(--color-text-muted)] ${
+          isMusic ? "h-16 w-16" : "h-16 w-12"
+        }`}
+      >
         N/A
       </div>
     );
@@ -727,9 +835,9 @@ function Poster({
     <Image
       src={imageUrl}
       alt={title}
-      width={48}
-      height={64}
-      className="h-16 w-12 shrink-0 rounded-[5px] border border-[var(--color-border)] object-cover"
+      width={dimensions.width}
+      height={dimensions.height}
+      className={dimensions.className}
       onError={() => setFailedImageUrl(imageUrl)}
     />
   );

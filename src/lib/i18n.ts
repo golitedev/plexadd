@@ -30,6 +30,15 @@ type Dictionary = {
   deleteAction: string;
   addPanelTitle: string;
   addPanelSubtitle: string;
+  manualMusic: {
+    title: string;
+    subtitle: string;
+    nameLabel: Record<"song" | "album", string>;
+    namePlaceholder: Record<"song" | "album", string>;
+    artistLabel: string;
+    artistPlaceholder: string;
+    submit: string;
+  };
   listTitle: Record<Section, string>;
   listSubtitle: string;
   itemsLabel: string;
@@ -67,19 +76,19 @@ export const dictionaries: Record<Language, Dictionary> = {
       music: "Music",
     },
     musicModes: {
-      song: "Song",
       album: "Album",
+      song: "Single",
     },
     searchLabel: {
       movie: "Search for a movie",
       tv: "Search for a TV show",
-      song: "Search for a song",
+      song: "Search for a single",
       album: "Search for an album",
     },
     searchPlaceholder: {
       movie: "Start typing a movie title",
       tv: "Start typing a TV show title",
-      song: "Start typing a song title",
+      song: "Start typing a single title",
       album: "Start typing an album title",
     },
     searching: "Searching…",
@@ -89,6 +98,21 @@ export const dictionaries: Record<Language, Dictionary> = {
     deleteAction: "Delete",
     addPanelTitle: "Add a new request",
     addPanelSubtitle: "Search the catalog, choose a result, and add it directly to the list.",
+    manualMusic: {
+      title: "Manual request",
+      subtitle: "Add a music request manually if it does not show up in search.",
+      nameLabel: {
+        album: "Album name",
+        song: "Single name",
+      },
+      namePlaceholder: {
+        album: "Enter an album name",
+        song: "Enter a single name",
+      },
+      artistLabel: "Artist name",
+      artistPlaceholder: "Enter an artist name",
+      submit: "Add manual request",
+    },
     listTitle: {
       movies: "Movie requests",
       tv: "TV requests",
@@ -114,7 +138,7 @@ export const dictionaries: Record<Language, Dictionary> = {
     labels: {
       movie: "Movie",
       tv: "TV Show",
-      song: "Song",
+      song: "Single",
       album: "Album",
     },
   },
@@ -134,19 +158,19 @@ export const dictionaries: Record<Language, Dictionary> = {
       music: "Musik",
     },
     musicModes: {
-      song: "Låt",
       album: "Album",
+      song: "Singel",
     },
     searchLabel: {
       movie: "Sök efter film",
       tv: "Sök efter TV-serie",
-      song: "Sök efter låt",
+      song: "Sök efter singel",
       album: "Sök efter album",
     },
     searchPlaceholder: {
       movie: "Börja skriva en filmtitel",
       tv: "Börja skriva en serietitel",
-      song: "Börja skriva en låttitel",
+      song: "Börja skriva en singeltitel",
       album: "Börja skriva ett album",
     },
     searching: "Söker…",
@@ -156,6 +180,21 @@ export const dictionaries: Record<Language, Dictionary> = {
     deleteAction: "Ta bort",
     addPanelTitle: "Lägg till en ny önskning",
     addPanelSubtitle: "Sök i katalogen, välj ett resultat och lägg till det direkt i listan.",
+    manualMusic: {
+      title: "Manuell önskning",
+      subtitle: "Lägg till en musikönskning manuellt om den inte dyker upp i sökningen.",
+      nameLabel: {
+        album: "Albumnamn",
+        song: "Singelnamn",
+      },
+      namePlaceholder: {
+        album: "Ange ett albumnamn",
+        song: "Ange ett singelnamn",
+      },
+      artistLabel: "Artistnamn",
+      artistPlaceholder: "Ange ett artistnamn",
+      submit: "Lägg till manuellt",
+    },
     listTitle: {
       movies: "Filmönskningar",
       tv: "TV-önskningar",
@@ -181,7 +220,7 @@ export const dictionaries: Record<Language, Dictionary> = {
     labels: {
       movie: "Film",
       tv: "TV-serie",
-      song: "Låt",
+      song: "Singel",
       album: "Album",
     },
   },
@@ -201,19 +240,19 @@ export const dictionaries: Record<Language, Dictionary> = {
       music: "Música",
     },
     musicModes: {
-      song: "Canción",
       album: "Álbum",
+      song: "Sencillo",
     },
     searchLabel: {
       movie: "Buscar una película",
       tv: "Buscar una serie",
-      song: "Buscar una canción",
+      song: "Buscar un sencillo",
       album: "Buscar un álbum",
     },
     searchPlaceholder: {
       movie: "Empieza a escribir un título",
       tv: "Empieza a escribir una serie",
-      song: "Empieza a escribir una canción",
+      song: "Empieza a escribir un sencillo",
       album: "Empieza a escribir un álbum",
     },
     searching: "Buscando…",
@@ -223,6 +262,21 @@ export const dictionaries: Record<Language, Dictionary> = {
     deleteAction: "Eliminar",
     addPanelTitle: "Añadir una nueva petición",
     addPanelSubtitle: "Busca en el catálogo, elige un resultado y añádelo directamente a la lista.",
+    manualMusic: {
+      title: "Solicitud manual",
+      subtitle: "Añade una petición de música manualmente si no aparece en la búsqueda.",
+      nameLabel: {
+        album: "Nombre del álbum",
+        song: "Nombre del sencillo",
+      },
+      namePlaceholder: {
+        album: "Escribe el nombre del álbum",
+        song: "Escribe el nombre del sencillo",
+      },
+      artistLabel: "Nombre del artista",
+      artistPlaceholder: "Escribe el nombre del artista",
+      submit: "Añadir manualmente",
+    },
     listTitle: {
       movies: "Pedidos de películas",
       tv: "Pedidos de series",
@@ -248,7 +302,7 @@ export const dictionaries: Record<Language, Dictionary> = {
     labels: {
       movie: "Película",
       tv: "Serie",
-      song: "Canción",
+      song: "Sencillo",
       album: "Álbum",
     },
   },
