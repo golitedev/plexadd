@@ -52,9 +52,9 @@ type Dictionary = {
 
 export const dictionaries: Record<Language, Dictionary> = {
   en: {
-    title: "Alvin’s Plex request board",
+    title: "",
     subtitle:
-      "Search for a movie, TV show, song, or album, add it to the board, and keep the queue visible for everyone.",
+      "Find and request movies, TV shows, and music for Alvin’s Plex server.",
     languageLabel: "Language",
     adminLogin: "Login",
     adminLogout: "Log out",
@@ -119,9 +119,9 @@ export const dictionaries: Record<Language, Dictionary> = {
     },
   },
   sv: {
-    title: "Alvins Plex-önskelista",
+    title: "",
     subtitle:
-      "Sök efter film, serier, låtar eller album, lägg till dem i listan och låt alla se kön.",
+      "Hitta och önska filmer, TV-serier och musik till Alvins Plex-server.",
     languageLabel: "Språk",
     adminLogin: "Login",
     adminLogout: "Logga ut",
@@ -186,9 +186,9 @@ export const dictionaries: Record<Language, Dictionary> = {
     },
   },
   es: {
-    title: "Tablero de solicitudes de Plex de Alvin",
+    title: "",
     subtitle:
-      "Busca una película, serie, canción o álbum, añádelo a la lista y deja la cola visible para todos.",
+      "Busca y solicita películas, series y música para el servidor Plex de Alvin.",
     languageLabel: "Idioma",
     adminLogin: "Login",
     adminLogout: "Cerrar sesión",

@@ -50,7 +50,7 @@ export async function POST(request: Request) {
       sourceId: body.sourceId,
     });
 
-    void sendTelegramNotification(created);
+    await sendTelegramNotification(created);
 
     return NextResponse.json({ request: created }, { status: 201 });
   } catch (error) {

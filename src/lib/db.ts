@@ -67,7 +67,7 @@ export async function listRequests() {
 }
 
 export async function insertRequest(input: SearchResult) {
-  const row = await supabaseRequest<RequestRow>("requests", {
+  const rows = await supabaseRequest<RequestRow[]>("requests", {
     method: "POST",
     headers: {
       Prefer: "return=representation",
@@ -82,6 +82,12 @@ export async function insertRequest(input: SearchResult) {
       source_id: input.sourceId,
     }),
   });
+
+  const row = rows[0];
+
+  if (!row) {
+    throw new Error("Supabase did not return the created request.");
+  }
 
   return mapRow(row);
 }

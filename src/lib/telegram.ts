@@ -7,8 +7,9 @@ export async function sendTelegramNotification(request: RequestRecord) {
   }
 
   const { telegramBotToken, telegramChatId } = getRequiredEnv();
+  const mediaLabel = request.mediaType ? request.mediaType.toUpperCase() : "REQUEST";
 
-  const parts = [`New Plexadd request`, `${request.mediaType.toUpperCase()}: ${request.title}`];
+  const parts = [`New Plexadd request`, `${mediaLabel}: ${request.title}`];
 
   if (request.subtitle) {
     parts.push(request.subtitle);
@@ -19,7 +20,7 @@ export async function sendTelegramNotification(request: RequestRecord) {
   }
 
   try {
-    await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
+    const response = await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -29,6 +30,11 @@ export async function sendTelegramNotification(request: RequestRecord) {
         text: parts.join("\n"),
       }),
     });
+
+    if (!response.ok) {
+      const body = await response.text();
+      console.error("Telegram notification failed", response.status, body);
+    }
   } catch (error) {
     console.error("Telegram notification failed", error);
   }

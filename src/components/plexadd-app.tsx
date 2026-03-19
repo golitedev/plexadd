@@ -329,12 +329,14 @@ export function PlexaddApp() {
           <div className="flex flex-col gap-5 px-4 py-4 sm:px-6">
             <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
               <div className="space-y-2">
-                <div className="text-xs font-medium tracking-[0.08em] text-[var(--color-text-muted)]">
-                  plexadd
-                </div>
-                <h1 className="text-2xl font-semibold tracking-tight text-[var(--color-text)]">
-                  {dictionary.title}
-                </h1>
+                <Image
+                  src="/logo/plexadd-logo.svg"
+                  alt="Plexadd"
+                  width={180}
+                  height={36}
+                  priority
+                  className="h-8 w-auto"
+                />
                 <p className="max-w-2xl text-sm leading-6 text-[var(--color-text-muted)]">
                   {dictionary.subtitle}
                 </p>
@@ -446,8 +448,8 @@ export function PlexaddApp() {
           </div>
         </header>
 
-        <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,400px)_minmax(0,1fr)]">
-          <section className="rounded-[7px] border border-[#1f1f1f] bg-[#0a0a0a]">
+        <div className="mt-4 grid gap-4 lg:items-start lg:grid-cols-[minmax(0,400px)_minmax(0,1fr)]">
+          <section className="self-start rounded-[7px] border border-[#1f1f1f] bg-[#0a0a0a]">
             <div className="border-b border-[var(--color-border-soft)] px-4 py-4 sm:px-5">
               <h2 className="text-base font-semibold text-[var(--color-text)]">
                 {dictionary.addPanelTitle}
@@ -491,7 +493,7 @@ export function PlexaddApp() {
                 />
               </label>
 
-              <div className="overflow-hidden rounded-[7px] border border-[#171717] bg-[#000000]">
+              <div className="max-h-[28rem] overflow-y-auto rounded-[7px] border border-[#171717] bg-[#000000]">
                 {isLoadingSearch ? (
                   <div className="px-4 py-6 text-sm text-[var(--color-text-muted)]">
                     {dictionary.searching}
@@ -539,7 +541,7 @@ export function PlexaddApp() {
             </div>
           </section>
 
-          <section className="rounded-[7px] border border-[#1f1f1f] bg-[#0a0a0a]">
+          <section className="rounded-[7px] border border-[#1f1f1f] bg-[#0a0a0a] lg:flex lg:h-[calc(100vh-16rem)] lg:min-h-0 lg:flex-col">
             <div className="flex flex-col gap-2 border-b border-[var(--color-border-soft)] px-4 py-4 sm:flex-row sm:items-end sm:justify-between sm:px-5">
               <div>
                 <h2 className="text-base font-semibold text-[var(--color-text)]">
@@ -567,7 +569,7 @@ export function PlexaddApp() {
               </div>
             ) : null}
 
-            <div>
+            <div className="lg:min-h-0 lg:flex-1 lg:overflow-y-auto">
               {isLoadingRequests ? (
                 <div className="px-4 py-10 text-sm text-[var(--color-text-muted)]">
                   {dictionary.loading}
