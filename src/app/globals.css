@@ -40,8 +40,6 @@ body {
 }
 
 button,
-input,
-select,
 [role="button"],
 a[href] {
   font: inherit;
@@ -50,6 +48,15 @@ a[href] {
 
 button {
   appearance: none;
+}
+
+input,
+textarea {
+  cursor: text;
+}
+
+select {
+  cursor: pointer;
 }
 
 input,
