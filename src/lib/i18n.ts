@@ -27,6 +27,7 @@ type Dictionary = {
   searchHint: string;
   noResults: string;
   addAction: string;
+  copyAction: string;
   deleteAction: string;
   addPanelTitle: string;
   addPanelSubtitle: string;
@@ -46,11 +47,12 @@ type Dictionary = {
   loading: string;
   confirmDelete: string;
   setupWarning: string;
-  feedback: {
-    added: string;
-    deleted: string;
-    loggedIn: string;
-    loggedOut: string;
+    feedback: {
+      added: string;
+      copied: string;
+      deleted: string;
+      loggedIn: string;
+      loggedOut: string;
   };
   errors: {
     generic: string;
@@ -95,6 +97,7 @@ export const dictionaries: Record<Language, Dictionary> = {
     searchHint: "Type at least two characters to search.",
     noResults: "No results found for that search.",
     addAction: "Add",
+    copyAction: "Copy",
     deleteAction: "Delete",
     addPanelTitle: "Add a new request",
     addPanelSubtitle: "Search the catalog, choose a result, and add it directly to the list.",
@@ -127,6 +130,7 @@ export const dictionaries: Record<Language, Dictionary> = {
       "Setup is incomplete. Add the Supabase and admin environment variables before deploying.",
     feedback: {
       added: "Request added.",
+      copied: "Copied to clipboard.",
       deleted: "Request deleted.",
       loggedIn: "Admin session active.",
       loggedOut: "Admin session closed.",
@@ -177,6 +181,7 @@ export const dictionaries: Record<Language, Dictionary> = {
     searchHint: "Skriv minst två tecken för att söka.",
     noResults: "Inga träffar för sökningen.",
     addAction: "Lägg till",
+    copyAction: "Kopiera",
     deleteAction: "Ta bort",
     addPanelTitle: "Lägg till en ny önskning",
     addPanelSubtitle: "Sök i katalogen, välj ett resultat och lägg till det direkt i listan.",
@@ -209,6 +214,7 @@ export const dictionaries: Record<Language, Dictionary> = {
       "Installationen är inte klar. Lägg till miljövariabler för Supabase och admin innan deploy.",
     feedback: {
       added: "Önskningen lades till.",
+      copied: "Kopierad till urklipp.",
       deleted: "Önskningen togs bort.",
       loggedIn: "Adminsession aktiv.",
       loggedOut: "Adminsession avslutad.",
@@ -259,6 +265,7 @@ export const dictionaries: Record<Language, Dictionary> = {
     searchHint: "Escribe al menos dos caracteres para buscar.",
     noResults: "No se encontraron resultados.",
     addAction: "Añadir",
+    copyAction: "Copiar",
     deleteAction: "Eliminar",
     addPanelTitle: "Añadir una nueva petición",
     addPanelSubtitle: "Busca en el catálogo, elige un resultado y añádelo directamente a la lista.",
@@ -291,6 +298,7 @@ export const dictionaries: Record<Language, Dictionary> = {
       "La configuración no está completa. Añade las variables de entorno de Supabase y admin antes de desplegar.",
     feedback: {
       added: "Petición añadida.",
+      copied: "Copiado al portapapeles.",
       deleted: "Petición eliminada.",
       loggedIn: "Sesión admin activa.",
       loggedOut: "Sesión admin cerrada.",

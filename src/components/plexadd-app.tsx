@@ -65,6 +65,24 @@ function formatRequestMeta(
   return bits.join("  •  ");
 }
 
+function sanitizeFolderNamePart(value: string) {
+  return value
+    .replace(/[<>:"/\\|?*\u0000-\u001F]/g, " ")
+    .replace(/\s+/g, " ")
+    .replace(/[. ]+$/g, "")
+    .trim();
+}
+
+function formatRequestCopyValue(request: RequestRecord) {
+  const title = sanitizeFolderNamePart(request.title);
+
+  if (request.releaseYear) {
+    return `${title} (${request.releaseYear})`;
+  }
+
+  return title;
+}
+
 export function PlexaddApp() {
   const [language, setLanguage] = useState<Language>(DEFAULT_LANGUAGE);
   const [section, setSection] = useState<Section>("movies");
@@ -84,10 +102,12 @@ export function PlexaddApp() {
   const [password, setPassword] = useState("");
   const [isSubmittingLogin, setIsSubmittingLogin] = useState(false);
   const [isMutatingRequest, setIsMutatingRequest] = useState<string | null>(null);
+  const [copiedRequestId, setCopiedRequestId] = useState<string | null>(null);
   const [showInlineMobileLanguage, setShowInlineMobileLanguage] = useState(false);
   const headerRowRef = useRef<HTMLDivElement | null>(null);
   const logoRef = useRef<HTMLDivElement | null>(null);
   const loginButtonRef = useRef<HTMLButtonElement | null>(null);
+  const copiedRequestTimeoutRef = useRef<number | null>(null);
 
   const dictionary = dictionaries[language];
   const deferredSearchQuery = useDeferredValue(searchQuery);
@@ -245,6 +265,14 @@ export function PlexaddApp() {
   }, [activeMediaType, deferredSearchQuery]);
 
   useEffect(() => {
+    return () => {
+      if (copiedRequestTimeoutRef.current) {
+        window.clearTimeout(copiedRequestTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
     setSearchQuery("");
     setSearchResults([]);
     setManualMusicName("");
@@ -342,6 +370,25 @@ export function PlexaddApp() {
       setErrorMessage(error instanceof Error ? error.message : dictionary.errors.generic);
     } finally {
       setIsMutatingRequest(null);
+    }
+  }
+
+  async function handleCopyRequest(request: RequestRecord) {
+    setErrorMessage(null);
+
+    try {
+      await navigator.clipboard.writeText(formatRequestCopyValue(request));
+      setCopiedRequestId(request.id);
+      if (copiedRequestTimeoutRef.current) {
+        window.clearTimeout(copiedRequestTimeoutRef.current);
+      }
+      copiedRequestTimeoutRef.current = window.setTimeout(() => {
+        setCopiedRequestId((current) => (current === request.id ? null : current));
+        copiedRequestTimeoutRef.current = null;
+      }, 1200);
+      setStatusMessage(dictionary.feedback.copied);
+    } catch {
+      setErrorMessage(dictionary.errors.generic);
     }
   }
 
@@ -772,16 +819,54 @@ export function PlexaddApp() {
                         </div>
 
                         {config?.adminAuthenticated ? (
-                          <button
-                            type="button"
-                            className="shrink-0 rounded-[6px] border border-[#1f1f1f] bg-[#111111] px-3 py-2 text-xs font-medium text-[#ededed] transition-colors hover:border-[#2a2a2a] hover:bg-[#151515] disabled:cursor-not-allowed disabled:opacity-60"
-                            onClick={() => void handleDeleteRequest(request.id)}
-                            disabled={isMutatingRequest === request.id}
-                          >
-                            {isMutatingRequest === request.id
-                              ? dictionary.loading
-                              : dictionary.deleteAction}
-                          </button>
+                          <div className="flex shrink-0 items-center gap-2">
+                            <button
+                              type="button"
+                              aria-label={dictionary.copyAction}
+                              title={dictionary.copyAction}
+                              className="flex h-10 w-10 items-center justify-center rounded-[6px] border border-[#1f1f1f] bg-[#111111] text-[#ededed] transition-colors hover:border-[#2a2a2a] hover:bg-[#151515]"
+                              onClick={() => void handleCopyRequest(request)}
+                            >
+                              {copiedRequestId === request.id ? (
+                                <svg
+                                  aria-hidden="true"
+                                  viewBox="0 0 20 20"
+                                  className="h-4 w-4"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="1.75"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                >
+                                  <path d="m4.5 10.5 3.25 3.25L15.5 6" />
+                                </svg>
+                              ) : (
+                                <svg
+                                  aria-hidden="true"
+                                  viewBox="0 0 20 20"
+                                  className="h-4 w-4"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="1.5"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                >
+                                  <rect x="7" y="5" width="9" height="11" rx="1.5" />
+                                  <path d="M5 13V4.5C5 3.67 5.67 3 6.5 3H13" />
+                                </svg>
+                              )}
+                            </button>
+                            <button
+                              type="button"
+                              className="flex h-10 items-center justify-center rounded-[6px] border border-[#1f1f1f] bg-[#111111] px-3 text-xs font-medium text-[#ededed] transition-colors hover:border-[#2a2a2a] hover:bg-[#151515] disabled:cursor-not-allowed disabled:opacity-60"
+                              onClick={() => void handleDeleteRequest(request.id)}
+                              disabled={isMutatingRequest === request.id}
+                            >
+                              {isMutatingRequest === request.id
+                                ? dictionary.loading
+                                : dictionary.deleteAction}
+                            </button>
+                          </div>
                         ) : null}
                       </div>
                     </li>
