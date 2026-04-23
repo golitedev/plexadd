@@ -730,7 +730,7 @@ export function PlexaddApp() {
                     <span className="block text-sm text-[var(--color-text-muted)]">
                       {dictionary.bookPreferences.languageLabel}
                     </span>
-                    <div className="inline-flex h-10 w-fit items-center rounded-[999px] border border-[#1f1f1f] bg-[#0a0a0a] p-1">
+                    <div className="grid grid-cols-3 gap-2">
                       {(["en", "sv", "es"] as const).map((option) => {
                         const isActive = option === bookRequestLanguage;
 
@@ -738,14 +738,14 @@ export function PlexaddApp() {
                           <button
                             key={option}
                             type="button"
-                            className={`flex h-8 w-10 items-center justify-center rounded-[999px] text-sm leading-none transition-colors ${
+                            className={`h-11 rounded-[6px] border px-3 text-sm transition-colors ${
                               isActive
-                                ? "bg-[#ededed] text-[#0a0a0a]"
-                                : "text-[#9f9f9f] hover:bg-[#111111] hover:text-[#ededed]"
+                                ? "border-[#3a3a3a] bg-[#ededed] text-[#0a0a0a]"
+                                : "border-[#1f1f1f] bg-[#0a0a0a] text-[var(--color-text-muted)] hover:border-[#2a2a2a] hover:bg-[#111111] hover:text-[#ededed]"
                             }`}
                             onClick={() => setBookRequestLanguage(option)}
                           >
-                            {languageNames[option]}
+                            {dictionary.bookPreferences.languages[option]}
                           </button>
                         );
                       })}
