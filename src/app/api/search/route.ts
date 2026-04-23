@@ -12,7 +12,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ results: [] });
   }
 
-  if (!mediaType || !["movie", "tv", "song", "album"].includes(mediaType)) {
+  if (!mediaType || !["movie", "tv", "song", "album", "book"].includes(mediaType)) {
     return NextResponse.json({ error: "Invalid media type." }, { status: 400 });
   }
 

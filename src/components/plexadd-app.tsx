@@ -11,6 +11,7 @@ import {
 } from "@/lib/i18n";
 import type {
   AppConfig,
+  BookRequestLanguage,
   Language,
   MediaType,
   RequestRecord,
@@ -25,7 +26,9 @@ function sectionForMediaType(mediaType: MediaType): Section {
     ? "movies"
     : mediaType === "tv"
       ? "tv"
-      : "music";
+      : mediaType === "book"
+        ? "books"
+        : "music";
 }
 
 function mediaTypeForSection(section: Section, musicMode: "song" | "album"): MediaType {
@@ -35,6 +38,10 @@ function mediaTypeForSection(section: Section, musicMode: "song" | "album"): Med
 
   if (section === "tv") {
     return "tv";
+  }
+
+  if (section === "books") {
+    return "book";
   }
 
   return musicMode;
@@ -74,7 +81,21 @@ function sanitizeFolderNamePart(value: string) {
 }
 
 function formatRequestCopyValue(request: RequestRecord) {
-  const title = sanitizeFolderNamePart(request.title);
+  const parts = [sanitizeFolderNamePart(request.title)];
+
+  if (request.mediaType === "book" && request.requestedLanguage) {
+    parts.push(`[${request.requestedLanguage.toUpperCase()}]`);
+  }
+
+  if (request.mediaType === "book" && request.wantsAudiobook) {
+    parts.push("[Audiobook]");
+  }
+
+  if (request.mediaType === "book" && request.wantsEbook) {
+    parts.push("[Ebook]");
+  }
+
+  const title = parts.join(" ");
 
   if (request.releaseYear) {
     return `${title} (${request.releaseYear})`;
@@ -95,6 +116,11 @@ export function PlexaddApp() {
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [manualMusicName, setManualMusicName] = useState("");
   const [manualArtistName, setManualArtistName] = useState("");
+  const [manualBookName, setManualBookName] = useState("");
+  const [manualBookAuthor, setManualBookAuthor] = useState("");
+  const [bookRequestLanguage, setBookRequestLanguage] = useState<BookRequestLanguage>("en");
+  const [wantsAudiobook, setWantsAudiobook] = useState(false);
+  const [wantsEbook, setWantsEbook] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false);
@@ -277,6 +303,8 @@ export function PlexaddApp() {
     setSearchResults([]);
     setManualMusicName("");
     setManualArtistName("");
+    setManualBookName("");
+    setManualBookAuthor("");
     setErrorMessage(null);
   }, [section, musicMode]);
 
@@ -285,13 +313,23 @@ export function PlexaddApp() {
     setErrorMessage(null);
     setStatusMessage(null);
 
+    const requestPayload =
+      result.mediaType === "book"
+        ? {
+            ...result,
+            requestedLanguage: bookRequestLanguage,
+            wantsAudiobook,
+            wantsEbook,
+          }
+        : result;
+
     try {
       const response = await fetch("/api/requests", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(result),
+        body: JSON.stringify(requestPayload),
       });
 
       const payload = (await response.json()) as
@@ -344,6 +382,41 @@ export function PlexaddApp() {
     if (created) {
       setManualMusicName("");
       setManualArtistName("");
+    }
+  }
+
+  async function handleAddManualBookRequest(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const title = manualBookName.trim();
+    const author = manualBookAuthor.trim();
+
+    if (!title || !author) {
+      return;
+    }
+
+    const normalizedTitle = title.toLowerCase().replace(/\s+/g, "-");
+    const normalizedAuthor = author.toLowerCase().replace(/\s+/g, "-");
+
+    const created = await handleAddRequest(
+      {
+        mediaType: "book",
+        title,
+        subtitle: author,
+        releaseYear: null,
+        imageUrl: null,
+        source: "openlibrary",
+        sourceId: `manual-book-${normalizedTitle}-${normalizedAuthor}-${Date.now()}`,
+        requestedLanguage: bookRequestLanguage,
+        wantsAudiobook,
+        wantsEbook,
+      },
+      "manual-book-request",
+    );
+
+    if (created) {
+      setManualBookName("");
+      setManualBookAuthor("");
     }
   }
 
@@ -442,6 +515,7 @@ export function PlexaddApp() {
     music: requests.filter(
       (request) => request.mediaType === "song" || request.mediaType === "album",
     ).length,
+    books: requests.filter((request) => request.mediaType === "book").length,
   };
 
   return (
@@ -547,7 +621,7 @@ export function PlexaddApp() {
               ) : null}
             </div>
 
-            <nav className="grid gap-2 sm:grid-cols-3">
+            <nav className="grid grid-cols-2 gap-2 lg:grid-cols-4">
               {SECTION_OPTIONS.map((option) => {
                 const isActive = option === section;
 
@@ -647,6 +721,109 @@ export function PlexaddApp() {
                       </button>
                     );
                   })}
+                </div>
+              ) : null}
+
+              {section === "books" ? (
+                <div className="space-y-4 rounded-[7px] border border-[#1f1f1f] bg-[#000000] p-4">
+                  <div className="space-y-2">
+                    <span className="block text-sm text-[var(--color-text-muted)]">
+                      {dictionary.bookPreferences.languageLabel}
+                    </span>
+                    <div className="inline-flex h-10 w-fit items-center rounded-[999px] border border-[#1f1f1f] bg-[#0a0a0a] p-1">
+                      {(["en", "sv", "es"] as const).map((option) => {
+                        const isActive = option === bookRequestLanguage;
+
+                        return (
+                          <button
+                            key={option}
+                            type="button"
+                            className={`flex h-8 w-10 items-center justify-center rounded-[999px] text-sm leading-none transition-colors ${
+                              isActive
+                                ? "bg-[#ededed] text-[#0a0a0a]"
+                                : "text-[#9f9f9f] hover:bg-[#111111] hover:text-[#ededed]"
+                            }`}
+                            onClick={() => setBookRequestLanguage(option)}
+                          >
+                            {languageNames[option]}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <span className="block text-sm text-[var(--color-text-muted)]">
+                      {dictionary.bookPreferences.formatLabel}
+                    </span>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        aria-pressed={wantsAudiobook}
+                        className={`flex h-11 items-center gap-3 rounded-[6px] border px-3 text-sm transition-colors ${
+                          wantsAudiobook
+                            ? "border-[#1f1f1f] bg-[#111111] text-[#ededed]"
+                            : "border-[#1f1f1f] bg-[#0a0a0a] text-[var(--color-text-muted)] hover:border-[#2a2a2a] hover:bg-[#111111] hover:text-[#ededed]"
+                        }`}
+                        onClick={() => setWantsAudiobook((current) => !current)}
+                      >
+                        <span
+                          className={`flex h-4 w-4 items-center justify-center rounded-[3px] border ${
+                            wantsAudiobook
+                              ? "border-[#ededed] bg-[#ededed] text-[#0a0a0a]"
+                              : "border-[#3a3a3a] bg-transparent text-transparent"
+                          }`}
+                        >
+                          <svg
+                            aria-hidden="true"
+                            viewBox="0 0 12 12"
+                            className="h-3 w-3"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="m2.5 6.25 2 2L9.5 3.75" />
+                          </svg>
+                        </span>
+                        <span>{dictionary.bookPreferences.audiobook}</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        aria-pressed={wantsEbook}
+                        className={`flex h-11 items-center gap-3 rounded-[6px] border px-3 text-sm transition-colors ${
+                          wantsEbook
+                            ? "border-[#1f1f1f] bg-[#111111] text-[#ededed]"
+                            : "border-[#1f1f1f] bg-[#0a0a0a] text-[var(--color-text-muted)] hover:border-[#2a2a2a] hover:bg-[#111111] hover:text-[#ededed]"
+                        }`}
+                        onClick={() => setWantsEbook((current) => !current)}
+                      >
+                        <span
+                          className={`flex h-4 w-4 items-center justify-center rounded-[3px] border ${
+                            wantsEbook
+                              ? "border-[#ededed] bg-[#ededed] text-[#0a0a0a]"
+                              : "border-[#3a3a3a] bg-transparent text-transparent"
+                          }`}
+                        >
+                          <svg
+                            aria-hidden="true"
+                            viewBox="0 0 12 12"
+                            className="h-3 w-3"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="m2.5 6.25 2 2L9.5 3.75" />
+                          </svg>
+                        </span>
+                        <span>{dictionary.bookPreferences.ebook}</span>
+                      </button>
+                    </div>
+                  </div>
                 </div>
               ) : null}
 
@@ -758,6 +935,54 @@ export function PlexaddApp() {
                       : dictionary.manualMusic.submit}
                   </button>
                 </form>
+              ) : section === "books" ? (
+                <form
+                  className="space-y-4 rounded-[7px] border border-[#1f1f1f] bg-[#000000] p-4"
+                  onSubmit={(event) => void handleAddManualBookRequest(event)}
+                >
+                  <div>
+                    <h3 className="text-sm font-medium text-[var(--color-text)]">
+                      {dictionary.manualBook.title}
+                    </h3>
+                    <p className="mt-1 text-sm text-[var(--color-text-muted)]">
+                      {dictionary.manualBook.subtitle}
+                    </p>
+                  </div>
+
+                  <label className="flex flex-col gap-2 text-sm text-[var(--color-text-muted)]">
+                    <span>{dictionary.manualBook.nameLabel}</span>
+                    <input
+                      className="h-12 rounded-[6px] border border-[#1f1f1f] bg-[#000000] px-4 text-[#ededed] outline-none transition-colors placeholder:text-[var(--color-text-muted)] focus:border-[#ededed]"
+                      placeholder={dictionary.manualBook.namePlaceholder}
+                      value={manualBookName}
+                      onChange={(event) => setManualBookName(event.target.value)}
+                    />
+                  </label>
+
+                  <label className="flex flex-col gap-2 text-sm text-[var(--color-text-muted)]">
+                    <span>{dictionary.manualBook.authorLabel}</span>
+                    <input
+                      className="h-12 rounded-[6px] border border-[#1f1f1f] bg-[#000000] px-4 text-[#ededed] outline-none transition-colors placeholder:text-[var(--color-text-muted)] focus:border-[#ededed]"
+                      placeholder={dictionary.manualBook.authorPlaceholder}
+                      value={manualBookAuthor}
+                      onChange={(event) => setManualBookAuthor(event.target.value)}
+                    />
+                  </label>
+
+                  <button
+                    type="submit"
+                    className="h-11 w-full rounded-[6px] bg-[#ededed] px-4 text-sm font-medium text-[#0a0a0a] transition-colors hover:bg-[#ffffff] disabled:cursor-not-allowed disabled:opacity-60"
+                    disabled={
+                      isMutatingRequest === "manual-book-request" ||
+                      !manualBookName.trim() ||
+                      !manualBookAuthor.trim()
+                    }
+                  >
+                    {isMutatingRequest === "manual-book-request"
+                      ? dictionary.loading
+                      : dictionary.manualBook.submit}
+                  </button>
+                </form>
               ) : null}
             </div>
           </section>
@@ -810,8 +1035,23 @@ export function PlexaddApp() {
                           mediaType={request.mediaType}
                         />
                         <div className="min-w-0 flex-1">
-                          <div className="truncate text-sm font-medium text-[var(--color-text)]">
-                            {request.title}
+                          <div className="flex min-w-0 items-center gap-2 text-sm font-medium text-[var(--color-text)]">
+                            <span className="truncate">{request.title}</span>
+                            {request.mediaType === "book" && request.requestedLanguage ? (
+                              <span className="shrink-0 text-xs font-mono text-[var(--color-text-muted)]">
+                                [{request.requestedLanguage.toUpperCase()}]
+                              </span>
+                            ) : null}
+                            {request.mediaType === "book" && request.wantsAudiobook ? (
+                              <span className="shrink-0 text-[var(--color-text-muted)]">
+                                <HeadphonesIcon />
+                              </span>
+                            ) : null}
+                            {request.mediaType === "book" && request.wantsEbook ? (
+                              <span className="shrink-0 text-[var(--color-text-muted)]">
+                                <BookIcon />
+                              </span>
+                            ) : null}
                           </div>
                           <div className="mt-1 truncate text-xs leading-5 text-[var(--color-text-muted)]">
                             {formatRequestMeta(request, language, dictionary.labels)}
@@ -925,5 +1165,42 @@ function Poster({
       className={dimensions.className}
       onError={() => setFailedImageUrl(imageUrl)}
     />
+  );
+}
+
+function HeadphonesIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 16 16"
+      className="h-4 w-4"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M3.25 8.25a4.75 4.75 0 1 1 9.5 0" />
+      <path d="M3.25 8.5v3.25a1 1 0 0 0 1 1h1.25V8.5H4.25a1 1 0 0 0-1 1Z" />
+      <path d="M12.75 8.5v3.25a1 1 0 0 1-1 1H10.5V8.5h1.25a1 1 0 0 1 1 1Z" />
+    </svg>
+  );
+}
+
+function BookIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 16 16"
+      className="h-4 w-4"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M4 2.75h7.25A1.75 1.75 0 0 1 13 4.5v8.75H5.5A1.5 1.5 0 0 0 4 14.75V2.75Z" />
+      <path d="M4 13.25a1.5 1.5 0 0 1 1.5-1.5H13" />
+    </svg>
   );
 }

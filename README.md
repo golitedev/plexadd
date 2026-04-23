@@ -1,6 +1,6 @@
 # plexadd
 
-Public request board for movies, TV shows, songs, and albums. Built with Next.js for Vercel, using Supabase as a lightweight backend.
+Public request board for movies, TV shows, music, and books. Built with Next.js for Vercel, using Supabase as a lightweight backend.
 
 ## Stack
 
@@ -9,6 +9,7 @@ Public request board for movies, TV shows, songs, and albums. Built with Next.js
 - Supabase Postgres via server-side REST calls
 - TMDB for movie and TV search
 - MusicBrainz for song and album search
+- Open Library for book search
 - Telegram Bot API for new request notifications
 
 ## Setup

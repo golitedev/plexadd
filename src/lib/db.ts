@@ -10,6 +10,9 @@ type RequestRow = {
   image_url: string | null;
   source: RequestRecord["source"];
   source_id: string;
+  requested_language: RequestRecord["requestedLanguage"];
+  wants_audiobook: boolean | null;
+  wants_ebook: boolean | null;
   created_at: string;
 };
 
@@ -23,6 +26,9 @@ function mapRow(row: RequestRow): RequestRecord {
     imageUrl: row.image_url,
     source: row.source,
     sourceId: row.source_id,
+    requestedLanguage: row.requested_language,
+    wantsAudiobook: row.wants_audiobook ?? false,
+    wantsEbook: row.wants_ebook ?? false,
     createdAt: row.created_at,
   };
 }
@@ -60,7 +66,7 @@ async function supabaseRequest<T>(path: string, init?: RequestInit): Promise<T> 
 
 export async function listRequests() {
   const rows = await supabaseRequest<RequestRow[]>(
-    "requests?select=id,media_type,title,subtitle,release_year,image_url,source,source_id,created_at&order=created_at.desc",
+    "requests?select=id,media_type,title,subtitle,release_year,image_url,source,source_id,requested_language,wants_audiobook,wants_ebook,created_at&order=created_at.desc",
   );
 
   return rows.map(mapRow);
@@ -80,6 +86,9 @@ export async function insertRequest(input: SearchResult) {
       image_url: input.imageUrl,
       source: input.source,
       source_id: input.sourceId,
+      requested_language: input.requestedLanguage ?? null,
+      wants_audiobook: input.wantsAudiobook ?? false,
+      wants_ebook: input.wantsEbook ?? false,
     }),
   });
 

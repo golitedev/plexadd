@@ -32,6 +32,10 @@ export async function searchCatalog({
     return searchTmdb(query, mediaType, language);
   }
 
+  if (mediaType === "book") {
+    return searchOpenLibrary(query);
+  }
+
   return searchMusicBrainz(query, mediaType);
 }
 
@@ -127,5 +131,47 @@ async function searchMusicBrainz(query: string, mediaType: "song" | "album") {
         : null,
     source: "musicbrainz",
     sourceId: item.id,
+  }));
+}
+
+async function searchOpenLibrary(query: string) {
+  const url = new URL("https://openlibrary.org/search.json");
+  url.searchParams.set("q", query);
+  url.searchParams.set(
+    "fields",
+    "key,title,author_name,first_publish_year,cover_i",
+  );
+  url.searchParams.set("limit", "8");
+
+  const response = await fetch(url, {
+    headers: {
+      "User-Agent": "plexadd/0.1.0 (personal request board)",
+      Accept: "application/json",
+    },
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new Error("Open Library search failed.");
+  }
+
+  const payload = (await response.json()) as {
+    docs: Array<{
+      key: string;
+      title: string;
+      author_name?: string[];
+      first_publish_year?: number;
+      cover_i?: number;
+    }>;
+  };
+
+  return payload.docs.map<SearchResult>((item) => ({
+    mediaType: "book",
+    title: item.title,
+    subtitle: item.author_name?.join(", ") ?? null,
+    releaseYear: item.first_publish_year ?? null,
+    imageUrl: item.cover_i ? `https://covers.openlibrary.org/b/id/${item.cover_i}-M.jpg` : null,
+    source: "openlibrary",
+    sourceId: item.key,
   }));
 }

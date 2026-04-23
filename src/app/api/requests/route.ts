@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { insertRequest, listRequests } from "@/lib/db";
 import { getSetupState } from "@/lib/env";
 import { sendTelegramNotification } from "@/lib/telegram";
-import type { SearchResult } from "@/lib/types";
+import type { BookRequestLanguage, SearchResult } from "@/lib/types";
 
 export async function GET() {
   if (!getSetupState().supabase) {
@@ -34,9 +34,16 @@ export async function POST(request: Request) {
     !body.title ||
     !body.source ||
     !body.sourceId ||
-    !["movie", "tv", "song", "album"].includes(body.mediaType)
+    !["movie", "tv", "song", "album", "book"].includes(body.mediaType)
   ) {
     return NextResponse.json({ error: "Invalid request payload." }, { status: 400 });
+  }
+
+  if (
+    body.requestedLanguage &&
+    !["en", "sv", "es"].includes(body.requestedLanguage)
+  ) {
+    return NextResponse.json({ error: "Invalid request language." }, { status: 400 });
   }
 
   try {
@@ -48,6 +55,9 @@ export async function POST(request: Request) {
       imageUrl: body.imageUrl ?? null,
       source: body.source,
       sourceId: body.sourceId,
+      requestedLanguage: (body.requestedLanguage as BookRequestLanguage | undefined) ?? null,
+      wantsAudiobook: Boolean(body.wantsAudiobook),
+      wantsEbook: Boolean(body.wantsEbook),
     });
 
     await sendTelegramNotification(created);

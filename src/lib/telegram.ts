@@ -1,6 +1,24 @@
 import type { RequestRecord } from "@/lib/types";
 import { getRequiredEnv, getSetupState } from "@/lib/env";
 
+function formatRequestLabel(request: RequestRecord) {
+  const parts = [request.title];
+
+  if (request.mediaType === "book" && request.requestedLanguage) {
+    parts.push(`[${request.requestedLanguage.toUpperCase()}]`);
+  }
+
+  if (request.mediaType === "book" && request.wantsAudiobook) {
+    parts.push("Audiobook");
+  }
+
+  if (request.mediaType === "book" && request.wantsEbook) {
+    parts.push("Ebook");
+  }
+
+  return parts.join(" ");
+}
+
 export async function sendTelegramNotification(request: RequestRecord) {
   if (!getSetupState().telegram) {
     return;
@@ -9,7 +27,7 @@ export async function sendTelegramNotification(request: RequestRecord) {
   const { telegramBotToken, telegramChatId } = getRequiredEnv();
   const mediaLabel = request.mediaType ? request.mediaType.toUpperCase() : "REQUEST";
 
-  const parts = [`New Plexadd request`, `${mediaLabel}: ${request.title}`];
+  const parts = [`New Plexadd request`, `${mediaLabel}: ${formatRequestLabel(request)}`];
 
   if (request.subtitle) {
     parts.push(request.subtitle);

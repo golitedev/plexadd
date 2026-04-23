@@ -2,7 +2,7 @@ import type { Language, MediaType, Section } from "@/lib/types";
 
 export const DEFAULT_LANGUAGE: Language = "en";
 export const LANGUAGE_OPTIONS: Language[] = ["en", "sv", "es"];
-export const SECTION_OPTIONS: Section[] = ["movies", "tv", "music"];
+export const SECTION_OPTIONS: Section[] = ["movies", "tv", "music", "books"];
 
 export const languageNames: Record<Language, string> = {
   en: "EN",
@@ -40,6 +40,22 @@ type Dictionary = {
     artistPlaceholder: string;
     submit: string;
   };
+  manualBook: {
+    title: string;
+    subtitle: string;
+    nameLabel: string;
+    namePlaceholder: string;
+    authorLabel: string;
+    authorPlaceholder: string;
+    submit: string;
+  };
+  bookPreferences: {
+    languageLabel: string;
+    formatLabel: string;
+    languages: Record<"en" | "sv" | "es", string>;
+    audiobook: string;
+    ebook: string;
+  };
   listTitle: Record<Section, string>;
   listSubtitle: string;
   itemsLabel: string;
@@ -65,7 +81,7 @@ export const dictionaries: Record<Language, Dictionary> = {
   en: {
     title: "",
     subtitle:
-      "Find and request movies, TV shows, and music for Alvin’s Plex server.",
+      "Find and request movies, TV shows, music, and books for Alvin’s Plex server.",
     languageLabel: "Language",
     adminLogin: "Login",
     adminLogout: "Log out",
@@ -76,6 +92,7 @@ export const dictionaries: Record<Language, Dictionary> = {
       movies: "Movies",
       tv: "TV Shows",
       music: "Music",
+      books: "Books",
     },
     musicModes: {
       album: "Album",
@@ -86,12 +103,14 @@ export const dictionaries: Record<Language, Dictionary> = {
       tv: "Search for a TV show",
       song: "Search for a single",
       album: "Search for an album",
+      book: "Search for a book",
     },
     searchPlaceholder: {
       movie: "Start typing a movie title",
       tv: "Start typing a TV show title",
       song: "Start typing a single title",
       album: "Start typing an album title",
+      book: "Start typing a book title",
     },
     searching: "Searching…",
     searchHint: "Type at least two characters to search.",
@@ -116,10 +135,31 @@ export const dictionaries: Record<Language, Dictionary> = {
       artistPlaceholder: "Enter an artist name",
       submit: "Add manual request",
     },
+    manualBook: {
+      title: "Manual request",
+      subtitle: "Add a book request manually if it does not show up in search.",
+      nameLabel: "Book name",
+      namePlaceholder: "Enter a book name",
+      authorLabel: "Author name",
+      authorPlaceholder: "Enter an author name",
+      submit: "Add manual request",
+    },
+    bookPreferences: {
+      languageLabel: "Book language",
+      formatLabel: "Format",
+      languages: {
+        en: "English",
+        sv: "Swedish",
+        es: "Spanish",
+      },
+      audiobook: "Audiobook",
+      ebook: "Ebook",
+    },
     listTitle: {
       movies: "Movie requests",
       tv: "TV requests",
       music: "Music requests",
+      books: "Book requests",
     },
     listSubtitle: "Newest requests stay at the top.",
     itemsLabel: "items",
@@ -144,12 +184,13 @@ export const dictionaries: Record<Language, Dictionary> = {
       tv: "TV Show",
       song: "Single",
       album: "Album",
+      book: "Book",
     },
   },
   sv: {
     title: "",
     subtitle:
-      "Hitta och önska filmer, TV-serier och musik till Alvins Plex-server.",
+      "Hitta och önska filmer, TV-serier, musik och böcker till Alvins Plex-server.",
     languageLabel: "Språk",
     adminLogin: "Login",
     adminLogout: "Logga ut",
@@ -160,6 +201,7 @@ export const dictionaries: Record<Language, Dictionary> = {
       movies: "Filmer",
       tv: "TV-serier",
       music: "Musik",
+      books: "Böcker",
     },
     musicModes: {
       album: "Album",
@@ -170,12 +212,14 @@ export const dictionaries: Record<Language, Dictionary> = {
       tv: "Sök efter TV-serie",
       song: "Sök efter singel",
       album: "Sök efter album",
+      book: "Sök efter bok",
     },
     searchPlaceholder: {
       movie: "Börja skriva en filmtitel",
       tv: "Börja skriva en serietitel",
       song: "Börja skriva en singeltitel",
       album: "Börja skriva ett album",
+      book: "Börja skriva en boktitel",
     },
     searching: "Söker…",
     searchHint: "Skriv minst två tecken för att söka.",
@@ -200,10 +244,31 @@ export const dictionaries: Record<Language, Dictionary> = {
       artistPlaceholder: "Ange ett artistnamn",
       submit: "Lägg till manuellt",
     },
+    manualBook: {
+      title: "Manuell önskning",
+      subtitle: "Lägg till en bokönskning manuellt om den inte dyker upp i sökningen.",
+      nameLabel: "Boktitel",
+      namePlaceholder: "Ange en boktitel",
+      authorLabel: "Författare",
+      authorPlaceholder: "Ange en författare",
+      submit: "Lägg till manuellt",
+    },
+    bookPreferences: {
+      languageLabel: "Bokspråk",
+      formatLabel: "Format",
+      languages: {
+        en: "Engelska",
+        sv: "Svenska",
+        es: "Spanska",
+      },
+      audiobook: "Ljudbok",
+      ebook: "E-bok",
+    },
     listTitle: {
       movies: "Filmönskningar",
       tv: "TV-önskningar",
       music: "Musikönskningar",
+      books: "Bokönskningar",
     },
     listSubtitle: "Nyaste önskningarna ligger överst.",
     itemsLabel: "poster",
@@ -228,12 +293,13 @@ export const dictionaries: Record<Language, Dictionary> = {
       tv: "TV-serie",
       song: "Singel",
       album: "Album",
+      book: "Bok",
     },
   },
   es: {
     title: "",
     subtitle:
-      "Busca y solicita películas, series y música para el servidor Plex de Alvin.",
+      "Busca y solicita películas, series, música y libros para el servidor Plex de Alvin.",
     languageLabel: "Idioma",
     adminLogin: "Login",
     adminLogout: "Cerrar sesión",
@@ -244,6 +310,7 @@ export const dictionaries: Record<Language, Dictionary> = {
       movies: "Películas",
       tv: "Series",
       music: "Música",
+      books: "Libros",
     },
     musicModes: {
       album: "Álbum",
@@ -254,12 +321,14 @@ export const dictionaries: Record<Language, Dictionary> = {
       tv: "Buscar una serie",
       song: "Buscar un sencillo",
       album: "Buscar un álbum",
+      book: "Buscar un libro",
     },
     searchPlaceholder: {
       movie: "Empieza a escribir un título",
       tv: "Empieza a escribir una serie",
       song: "Empieza a escribir un sencillo",
       album: "Empieza a escribir un álbum",
+      book: "Empieza a escribir un libro",
     },
     searching: "Buscando…",
     searchHint: "Escribe al menos dos caracteres para buscar.",
@@ -284,10 +353,31 @@ export const dictionaries: Record<Language, Dictionary> = {
       artistPlaceholder: "Escribe el nombre del artista",
       submit: "Añadir manualmente",
     },
+    manualBook: {
+      title: "Solicitud manual",
+      subtitle: "Añade una petición de libro manualmente si no aparece en la búsqueda.",
+      nameLabel: "Nombre del libro",
+      namePlaceholder: "Escribe el nombre del libro",
+      authorLabel: "Nombre del autor",
+      authorPlaceholder: "Escribe el nombre del autor",
+      submit: "Añadir manualmente",
+    },
+    bookPreferences: {
+      languageLabel: "Idioma del libro",
+      formatLabel: "Formato",
+      languages: {
+        en: "Inglés",
+        sv: "Sueco",
+        es: "Español",
+      },
+      audiobook: "Audiolibro",
+      ebook: "Ebook",
+    },
     listTitle: {
       movies: "Pedidos de películas",
       tv: "Pedidos de series",
       music: "Pedidos de música",
+      books: "Pedidos de libros",
     },
     listSubtitle: "Las peticiones más nuevas quedan arriba.",
     itemsLabel: "elementos",
@@ -312,6 +402,7 @@ export const dictionaries: Record<Language, Dictionary> = {
       tv: "Serie",
       song: "Sencillo",
       album: "Álbum",
+      book: "Libro",
     },
   },
 };
