@@ -64,6 +64,12 @@ select {
   appearance: none;
 }
 
+input,
+select,
+textarea {
+  font-size: 16px;
+}
+
 ::selection {
   background: rgba(237, 237, 237, 0.22);
 }
